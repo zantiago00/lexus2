@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexTerminus v2.1 - Control de Términos Procesales Civiles</title>
+    <meta name="description" content="Sistema avanzado para el control y seguimiento de términos procesales civiles en Colombia, con cálculo de días hábiles, alertas, referencias CGP y persistencia local.">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1804/1804541.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <section id="landing">
+            <div class="panel dark">
+                <h2>LexTerminus v2.1</h2>
+                <h3>Sistema Avanzado de Control de Términos Procesales Civiles</h3>
+                <p>La herramienta definitiva para abogados y firmas jurídicas en Colombia. Gestión precisa, alertas inteligentes y referencias rápidas del CGP, todo en su navegador.</p>
+                <ul>
+                    <li>Control exacto de plazos judiciales</li>
+                    <li>Alertas visuales configurables</li>
+                    <li>Referencia integrada de plazos CGP</li>
+                    <li>Cálculo automático con días hábiles y festivos (actualizables)</li>
+                    <li>Almacenamiento local seguro en su navegador</li>
+                    <li>Funciones avanzadas: búsqueda, edición, eliminación</li>
+                    <li>Exportación e Importación de datos (CSV)</li>
+                    <li>Interfaz optimizada y moderna</li>
+                </ul>
+                <p class="version-info">Versión: 2.1</p>
+            </div>
+            <div class="panel light">
+                <img src="https://cdn-icons-png.flaticon.com/512/1804/1804541.png" alt="Balanza de la Justicia" class="icon">
+                <h1>LexTerminus</h1>
+                <p>Optimice su gestión procesal. Evite vencimientos.</p>
+                <button id="enterAppButton">INGRESAR AL SISTEMA</button>
+                <div class="loading-indicator" id="landing-loading" style="display: none;">Cargando...</div>
+            </div>
+        </section>
+
+        <div id="app" style="display: none;">
+            <header class="app-header">
+                <img src="https://cdn-icons-png.flaticon.com/512/1804/1804541.png" alt="Icono LexTerminus" class="app-icon-header">
+                <h1>Sistema de Control de Términos Procesales Civiles</h1>
+            </header>
+
+            <div id="messageArea" class="message" role="alert" aria-live="assertive"></div>
+
+            <nav class="tabs" role="tablist" aria-label="Secciones de la aplicación">
+                <button class="tab active" id="tab-registro" role="tab" aria-selected="true" aria-controls="registro" onclick="UIManager.openTab(event,'registro')">Registro</button>
+                <button class="tab" id="tab-consulta" role="tab" aria-selected="false" aria-controls="consulta" onclick="UIManager.openTab(event,'consulta')">Consulta</button>
+                <button class="tab" id="tab-vencimientos" role="tab" aria-selected="false" aria-controls="vencimientos" onclick="UIManager.openTab(event,'vencimientos')">Vencimientos</button>
+                <button class="tab" id="tab-referencia" role="tab" aria-selected="false" aria-controls="referencia" onclick="UIManager.openTab(event,'referencia')">Plazos Referencia (CGP)</button>
+                <button class="tab" id="tab-configuracion" role="tab" aria-selected="false" aria-controls="configuracion" onclick="UIManager.openTab(event,'configuracion')">Configuración</button>
+            </nav>
+
+            <section id="registro" class="tab-content active" role="tabpanel" aria-labelledby="tab-registro">
+                <div class="card">
+                    <h2 id="registroFormTitle">Registro de Nuevo Término Procesal</h2>
+                    <form id="registroForm" novalidate>
+                        <input type="hidden" id="editTerminoId">
+                        <div class="form-group">
+                            <label for="expediente">Número de Expediente:<span class="required">*</span></label>
+                            <input type="text" id="expediente" placeholder="Ej: 2025-00123 ó Radicado completo" required aria-required="true" pattern=".*\S+.*" title="Ingrese el número de expediente o radicado.">
+                            <small class="validation-error" id="expedienteError"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="juzgado">Juzgado / Despacho:</label>
+                            <input type="text" id="juzgado" placeholder="Ej: Juzgado 01 Civil Municipal de Bogotá D.C.">
+                             <small class="validation-error" id="juzgadoError"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="tipoTermino">Tipo de Término (Ref. CGP):<span class="required">*</span></label>
+                            <select id="tipoTermino" required aria-required="true">
+                                <option value="">-- Seleccione un Tipo --</option>
+                                <optgroup label="Términos Comunes (CGP Colombia)">
+                                    <option value="subsanarDemanda" data-days="5">Subsanar Demanda (5 días - Art. 90)</option>
+                                    <option value="contestacionDemandaVerbal" data-days="20">Contestación Demanda - P. Verbal (20 días - Art. 369)</option>
+                                    <option value="contestacionDemandaVerbalSumario" data-days="10">Contestación Demanda - P. Verbal Sumario (10 días - Art. 391)</option>
+                                    <option value="trasladoExcepcionesPrevias" data-days="3">Traslado Excepciones Previas (Pronunciarse/Subsanar) (3 días - Art. 101)</option>
+                                    <option value="subsanarExcepcionesPrevias" data-days="5">Subsanar Defectos por Excepciones Previas (5 días - Art. 101 Num 3)</option>
+                                    <option value="trasladoExcepcionesMerito" data-days="5">Traslado Excepciones Mérito (Pedir Pruebas) (5 días - Art. 370)</option>
+                                    <option value="pruebasExcepcionesMerito" data-days="5">Solicitar Pruebas sobre Excepciones de Mérito (5 días)</option> <option value="trasladoExcepcionesVerbalSumario" data-days="3">Traslado Excepciones Mérito - Verbal Sumario (3 días - Art. 391)</option>
+                                    <option value="recursoReposicion" data-days="3">Recurso Reposición (Interponer y Sustentar) (3 días - Art. 318)</option>
+                                    <option value="recursoApelacionAuto" data-days="3">Recurso Apelación Auto (Interponer) (3 días - Art. 322)</option>
+                                    <option value="recursoApelacionSentencia" data-days="3">Recurso Apelación Sentencia (Interponer) (3 días - Art. 322)</option>
+                                    <option value="sustentacionApelacionAuto" data-days="3">Sustentación Apelación Auto (Adhesión) (3 días - Tras ejec. auto concede)</option>
+                                    <option value="sustentacionApelacionSentencia" data-days="5">Sustentación Apelación Sentencia (Adhesión) (5 días - Tras admisión 2da inst.)</option>
+                                    <option value="recursoSuplica" data-days="3">Recurso Súplica (Interponer y Sustentar) (3 días - Art. 331)</option>
+                                    <option value="recursoQueja" data-days="5">Recurso Queja (Interponer Directo o tras Reposición) (5 días - Art. 353)</option>
+                                    <option value="interponerCasacion" data-days="5">Interponer Recurso Casación (5 días - Art. 340)</option>
+                                    <option value="sustentarCasacion" data-days="30">Sustentar Recurso Casación (30 días - Art. 343)</option>
+                                    <option value="trasladoCasacionOpositor" data-days="15">Traslado demanda Casación al Opositor (15 días - Art. 345)</option>
+                                    <option value="ejecutoriaProvidencia" data-days="3">Término Ejecutoria Providencia (General) (3 días - Art. 302)</option>
+                                    <option value="solicitudAclaracionCorreccion" data-days="3">Solicitud Aclaración / Corrección Providencia (3 días - Art. 285/286)</option>
+                                    <option value="objecionJuramentoEstimatorio" data-days="5">Objeción Juramento Estimatorio (5 días - Art. 206)</option>
+                                    <option value="trasladoDictamen" data-days="3">Traslado Dictamen Pericial (Aportado por parte) (3 días - Art. 228)</option>
+                                    <option value="rendirDictamenDecretoJuez" data-days="">Rendir Dictamen (Decretado por Juez) (Término Manual)</option>
+                                    <option value="trasladoDictamenOficio" data-days="3">Traslado Dictamen Decretado de Oficio (3 días - Art. 231)</option>
+                                    <option value="trasladoTransaccion" data-days="3">Traslado Propuesta Transacción (3 días)</option>
+                                    <option value="terminoPruebaGeneral" data-days="">Término de Prueba (Fijado por Juez) (Término Manual)</option>
+                                    <option value="alegatosConclusionVerbal" data-days="0">Alegatos Conclusión (P. Verbal - En audiencia)</option>
+                                    <option value="alegatosConclusionEscrito" data-days="10">Alegatos Conclusión (P. Escrito General) (10 días)</option>
+                                    <option value="solicitudNulidad" data-days="5">Solicitud Nulidad Procesal (Término variable, ej. 5 días tras conocimiento - Art. 135)</option>
+                                    <option value="otro" data-days="">Otro (Especificar y Poner Días Manualmente)</option>
+                                </optgroup>
+                                <optgroup label="Notificaciones (CGP Art. 291, 292)">
+                                    <option value="notificacionPersonalComparecencia" data-days="5">Comparecencia Not. Personal (Tras aviso - Mismo Mcpio) (5 días)</option>
+                                    <option value="notificacionPersonalComparecenciaDistinto" data-days="10">Comparecencia Not. Personal (Tras aviso - Mcpio Distinto) (10 días)</option>
+                                    <option value="notificacionPersonalComparecenciaExterior" data-days="30">Comparecencia Not. Personal (Tras aviso - Exterior) (30 días)</option>
+                                </optgroup>
+                            </select>
+                            <small class="validation-error" id="tipoTerminoError"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="otroTipoTermino" style="display:none;">Especifique Otro Tipo:<span class="required">*</span></label>
+                            <input type="text" id="otroTipoTermino" style="display:none;" placeholder="Describa brevemente el tipo de término" aria-required="false">
+                             <small class="validation-error" id="otroTipoTerminoError"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaInicio">Fecha de Inicio del Término (Notificación/Ejecutoria):<span class="required">*</span></label>
+                            <input type="date" id="fechaInicio" required aria-required="true" title="Fecha en que empieza a correr el término.">
+                            <small class="validation-error" id="fechaInicioError"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="dias">Días Hábiles para Vencimiento:<span class="required">*</span></label>
+                            <input type="number" id="dias" min="0" required aria-required="true" title="Número de días hábiles. 0 para actos en audiencia.">
+                             <small>Use 0 para términos que se cumplen en la misma audiencia/acto.</small>
+                             <small class="validation-error" id="diasError"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaVencimiento">Fecha de Vencimiento Calculada:</label>
+                            <input type="date" id="fechaVencimiento" readonly style="background-color: #e9ecef;" aria-live="polite">
+                             <small class="validation-error" id="fechaVencimientoError"></small> </div>
+                         <div class="form-group">
+                            <label for="horaVencimiento">Hora Límite (Opcional):</label>
+                            <input type="time" id="horaVencimiento" title="Hora límite del día de vencimiento (Ej: 17:00).">
+                            <small>Útil para recordar la hora de cierre del despacho.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="notas">Notas Adicionales:</label>
+                            <textarea id="notas" placeholder="Anotaciones relevantes, estado actual, próximo paso, etc." maxlength="1000"></textarea>
+                             <small><span id="notasCharCount">0</span>/1000 caracteres</small>
+                        </div>
+                         <div class="form-actions">
+                             <button type="submit" id="submitButton">Registrar Término</button>
+                             <button type="button" class="secondary" onclick="FormManager.clearForm()">Limpiar Formulario</button>
+                             <div class="loading-indicator" id="form-loading" style="display: none;">Procesando...</div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section id="consulta" class="tab-content" role="tabpanel" aria-labelledby="tab-consulta">
+                <div class="card">
+                    <h2>Consulta y Gestión de Términos Registrados</h2>
+                    <div class="form-group">
+                        <label for="searchConsulta">Buscar por Expediente, Juzgado, Tipo o Notas:</label>
+                        <input type="search" id="searchConsulta" placeholder="Ingrese término de búsqueda..." aria-controls="consultaTableBody">
+                    </div>
+                    <div class="table-controls">
+                        <label for="sortConsulta">Ordenar por:</label>
+                        <select id="sortConsulta">
+                            <option value="fechaRegistroDesc">Más Reciente Primero</option>
+                            <option value="fechaRegistroAsc">Más Antiguo Primero</option>
+                            <option value="fechaVencimientoAsc">Vencimiento Próximo</option>
+                            <option value="fechaVencimientoDesc">Vencimiento Lejano</option>
+                            <option value="expedienteAsc">Expediente (A-Z)</option>
+                            <option value="expedienteDesc">Expediente (Z-A)</option>
+                        </select>
+                        <button onclick="TableManager.refreshConsultaTable()">Refrescar</button>
+                    </div>
+                    <div class="table-responsive">
+                         <table id="consultaTable" class="data-table" aria-live="polite">
+                             <thead>
+                                 <tr>
+                                     <th>Expediente</th>
+                                     <th>Juzgado</th>
+                                     <th>Tipo Término</th>
+                                     <th>Fecha Inicio</th>
+                                     <th>Días</th>
+                                     <th>Fecha Vencimiento</th>
+                                     <th>Hora Límite</th>
+                                     <th>Notas</th>
+                                     <th>Acciones</th>
+                                 </tr>
+                             </thead>
+                             <tbody id="consultaTableBody">
+                                 <tr><td colspan="9" class="placeholder">Cargando datos...</td></tr>
+                             </tbody>
+                         </table>
+                    </div>
+                    <div class="pagination-controls" id="consultaPagination">
+                        </div>
+                </div>
+            </section>
+
+            <section id="vencimientos" class="tab-content" role="tabpanel" aria-labelledby="tab-vencimientos">
+                <div class="card">
+                    <h2>Próximos Vencimientos y Estado</h2>
+                    <p class="status-legend">
+                        <span class="legend-item"><span class="color-box urgent-bg"></span> Rojo: Urgente / Vencido</span> |
+                        <span class="legend-item"><span class="color-box warning-bg"></span> Amarillo: Próximo a vencer</span> |
+                        <span class="legend-item"><span class="color-box normal-bg"></span> Normal</span>
+                    </p>
+                     <div class="table-controls">
+                        <label for="filterVencimientos">Mostrar:</label>
+                        <select id="filterVencimientos">
+                            <option value="all">Todos</option>
+                            <option value="pending">Solo Pendientes</option>
+                            <option value="urgent">Urgentes y Vencidos</option>
+                            <option value="warning">Advertencias</option>
+                            <option value="past">Solo Vencidos</option>
+                        </select>
+                        <button onclick="TableManager.refreshVencimientosTable()">Refrescar</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="vencimientosTable" class="data-table" aria-live="polite">
+                            <thead>
+                                <tr>
+                                    <th>Expediente</th>
+                                    <th>Tipo Término</th>
+                                    <th>Fecha Inicio</th>
+                                    <th>Fecha Vencimiento</th>
+                                    <th>Hora Límite</th>
+                                    <th>Estado</th>
+                                    <th>Días Háb. Restantes</th>
+                                    <th>Juzgado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vencimientosTableBody">
+                                <tr><td colspan="8" class="placeholder">Cargando datos de vencimientos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                     <div class="pagination-controls" id="vencimientosPagination">
+                        </div>
+                </div>
+            </section>
+
+            <section id="referencia" class="tab-content" role="tabpanel" aria-labelledby="tab-referencia">
+                <div class="card">
+                    <h2>Plazos Comunes de Referencia (Código General del Proceso - Colombia)</h2>
+                    <p>Guía rápida de términos comunes. <strong>Importante:</strong> Siempre verifique el auto o providencia específica y consulte el CGP actualizado. Esta es solo una referencia informativa.</p>
+                    <input type="search" id="searchReferencia" placeholder="Buscar en referencias (Ej: Apelación, Contestación)..." style="margin-bottom: 15px; width: 100%;">
+
+                    <div class="reference-section" data-keywords="contestación demanda verbal sumario artículo 369 391">
+                        <button class="reference-button" onclick="UIManager.toggleReferenceSection(this)">Contestación Demanda (+)</button>
+                        <div class="reference-content">
+                            <h4>Contestación de la Demanda</h4>
+                            <p><strong>Proceso Verbal:</strong> 20 días (Art. 369 CGP).</p>
+                            <p><strong>Proceso Verbal Sumario:</strong> 10 días (Art. 391 CGP).</p>
+                            <p>El término corre desde la notificación del auto admisorio al demandado (o del auto que obedezca lo resuelto por el superior).</p>
+                            <a href="https://leyes.co/codigo_general_del_proceso/369.htm" target="_blank" rel="noopener noreferrer">Ver Art. 369 CGP</a> |
+                            <a href="https://leyes.co/codigo_general_del_proceso/391.htm" target="_blank" rel="noopener noreferrer">Ver Art. 391 CGP</a>
+                        </div>
+                    </div>
+
+                    <div class="reference-section" data-keywords="excepciones previas mérito traslado subsanar artículo 101 370 391">
+                        <button class="reference-button" onclick="UIManager.toggleReferenceSection(this)">Excepciones (+)</button>
+                        <div class="reference-content">
+                            <h4>Excepciones</h4>
+                            <p><strong>Excepciones Previas (Verbal):</strong> Se proponen junto con la contestación. Traslado al demandante por <strong>3 días</strong> para que se pronuncie y, si es el caso, subsane los defectos (Art. 101, 370 CGP).</p>
+                             <p><strong>Subsanar defectos indicados por Excepciones Previas:</strong> <strong>5 días</strong> (Art. 101 Num 3 CGP).</p>
+                            <p><strong>Excepciones de Mérito (Verbal):</strong> Se proponen en la contestación. Traslado al demandante por <strong>5 días</strong> para pedir pruebas adicionales relacionadas con ellas (Art. 370 CGP).</p>
+                            <p><strong>Excepciones de Mérito (Verbal Sumario):</strong> Se proponen en la contestación. Traslado al demandante por <strong>3 días</strong> (Art. 391 CGP).</p>
+                             <a href="https://leyes.co/codigo_general_del_proceso/101.htm" target="_blank" rel="noopener noreferrer">Ver Art. 101 CGP</a> |
+                             <a href="https://leyes.co/codigo_general_del_proceso/370.htm" target="_blank" rel="noopener noreferrer">Ver Art. 370 CGP</a>
+                        </div>
+                    </div>
+
+                     <div class="reference-section" data-keywords="recursos reposición apelación súplica queja casación interponer sustentar artículo 318 322 327 331 353 340 343">
+                        <button class="reference-button" onclick="UIManager.toggleReferenceSection(this)">Recursos (+)</button>
+                        <div class="reference-content">
+                            <h4>Recursos Principales</h4>
+                            <p><strong>Reposición:</strong> <strong>3 días</strong> (contra autos). Se interpone y sustenta en el mismo escrito, salvo norma en contrario (Art. 318 CGP).</p>
+                            <p><strong>Apelación Autos:</strong> <strong>3 días</strong> para interponer (Art. 322 CGP). Sustentación: En procesos verbales y v. sumarios, verbalmente en audiencia si se profiere en ella; si es fuera de audiencia, <strong>3 días</strong> tras ejecutoria del auto que concede el recurso (Art. 322 #3).</p>
+                             <p><strong>Apelación Sentencia:</strong> <strong>3 días</strong> para interponer (Art. 322 CGP). Sustentación: <strong>5 días</strong> después de admitido el recurso en segunda instancia (o del traslado si aplica), o en audiencia si la sentencia se dicta en ella (Art. 327 CGP).</p>
+                             <p><strong>Súplica:</strong> <strong>3 días</strong> (contra autos que dicte el Magistrado Sustanciador no susceptibles de apelación). Se interpone y sustenta (Art. 331 CGP).</p>
+                             <p><strong>Queja:</strong> Contra auto que niega apelación/casación. Reposición y en subsidio queja (<strong>3 días</strong>). Si no se interpuso reposición, interponer queja directamente (<strong>5 días</strong>) + aportar copias (<strong>5 días</strong>) (Art. 353 CGP).</p>
+                            <p><strong>Casación:</strong> <strong>5 días</strong> para interponer tras notificación de sentencia. <strong>30 días</strong> para presentar la demanda de casación una vez concedido el recurso (Art. 340, 343 CGP).</p>
+                             <a href="https://leyes.co/codigo_general_del_proceso/318.htm" target="_blank" rel="noopener noreferrer">Ver Art. 318 CGP</a> |
+                             <a href="https://leyes.co/codigo_general_del_proceso/322.htm" target="_blank" rel="noopener noreferrer">Ver Art. 322 CGP</a> |
+                             <a href="https://leyes.co/codigo_general_del_proceso/353.htm" target="_blank" rel="noopener noreferrer">Ver Art. 353 CGP</a>
+                        </div>
+                    </div>
+
+                     <div class="reference-section" data-keywords="otros términos comunes subsanar demanda ejecutoria aclaración corrección dictamen pericial juramento estimatorio notificación personal aviso artículo 90 302 285 286 228 206 291">
+                        <button class="reference-button" onclick="UIManager.toggleReferenceSection(this)">Otros Términos Comunes (+)</button>
+                        <div class="reference-content">
+                            <h4>Otros Términos</h4>
+                            <p><strong>Subsanar Demanda:</strong> <strong>5 días</strong> (Art. 90 CGP).</p>
+                            <p><strong>Ejecutoria de Providencias:</strong> <strong>3 días</strong> después de notificadas (si no caben recursos o no se interpusieron), o notificación por estado del auto que resuelva recursos (Art. 302 CGP).</p>
+                            <p><strong>Aclaración / Corrección Providencias:</strong> Dentro del término de ejecutoria (<strong>3 días</strong>) (Art. 285, 286 CGP).</p>
+                            <p><strong>Traslado Dictamen Pericial (aportado por parte):</strong> <strong>3 días</strong> para solicitar aclaración, complementación u objetar por error grave (Art. 228 CGP).</p>
+                            <p><strong>Objeción Juramento Estimatorio:</strong> Dentro del traslado respectivo (Ej: contestación demanda) o <strong>5 días</strong> si se hace en audiencia (Art. 206 CGP).</p>
+                            <p><strong>Notificación Personal (Comparecencia tras aviso):</strong> <strong>5 días</strong> (mismo municipio), <strong>10 días</strong> (municipio distinto), <strong>30 días</strong> (exterior) (Art. 291 CGP).</p>
+                             <a href="https://leyes.co/codigo_general_del_proceso/90.htm" target="_blank" rel="noopener noreferrer">Ver Art. 90 CGP</a> |
+                             <a href="https://leyes.co/codigo_general_del_proceso/302.htm" target="_blank" rel="noopener noreferrer">Ver Art. 302 CGP</a> |
+                             <a href="https://leyes.co/codigo_general_del_proceso/291.htm" target="_blank" rel="noopener noreferrer">Ver Art. 291 CGP</a>
+                        </div>
+                    </div>
+                     <p id="noReferenceFound" style="display: none; color: #777; margin-top: 15px;">No se encontraron referencias para el término de búsqueda.</p>
+                </div>
+            </section>
+
+            <section id="configuracion" class="tab-content" role="tabpanel" aria-labelledby="tab-configuracion">
+                <div class="card">
+                    <h2>Configuración del Sistema</h2>
+                    <form id="configForm">
+                        <fieldset>
+                            <legend>Cálculo de Fechas</legend>
+                            <div class="form-group">
+                                <label for="holidays">Días Festivos (Colombia - Formato AAAA-MM-DD, uno por línea):</label>
+                                <textarea id="holidays" rows="12" placeholder="Ej:\n2025-01-01\n2025-01-06\n..." title="Asegúrese que las fechas sean correctas y estén en formato AAAA-MM-DD. Estos días no se contarán como hábiles." aria-describedby="holidaysHelp"></textarea>
+                                <small id="holidaysHelp">Mantenga esta lista actualizada anualmente. Puede copiar/pegar listas de festivos oficiales. Las líneas vacías o con formato incorrecto serán ignoradas.</small>
+                                <small class="validation-error" id="holidaysError"></small>
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                             <legend>Alertas Visuales (Tabla Vencimientos)</legend>
+                             <div class="form-group">
+                                 <label for="warningDays">Días para Alerta de Advertencia (Amarillo):</label>
+                                 <input type="number" id="warningDays" min="1" value="5" title="Número de días hábiles restantes o menos para mostrar advertencia." aria-describedbyby="warningHelp">
+                                 <small id="warningHelp">Mostrará advertencia cuando falten estos días hábiles o menos para el vencimiento.</small>
+                             </div>
+                             <div class="form-group">
+                                 <label for="urgentDays">Días para Alerta Urgente (Rojo):</label>
+                                 <input type="number" id="urgentDays" min="0" value="2" title="Número de días hábiles restantes o menos para mostrar alerta urgente (0 incluye el día de vencimiento)." aria-describedbyby="urgentHelp">
+                                 <small id="urgentHelp">Mostrará alerta urgente cuando falten estos días hábiles o menos (incluyendo vencidos).</small>
+                             </div>
+                         </fieldset>
+
+                         <fieldset>
+                             <legend>Interfaz y Comportamiento</legend>
+                              <div class="form-group">
+                                 <label for="itemsPerPage">Términos por Página (Consulta/Vencimientos):</label>
+                                 <select id="itemsPerPage">
+                                     <option value="10">10</option>
+                                     <option value="25">25</option>
+                                     <option value="50">50</option>
+                                     <option value="100">100</option>
+                                 </select>
+                                 <small>Número de registros mostrados por página en las tablas.</small>
+                             </div>
+                             </fieldset>
+
+                        <div class="form-actions">
+                            <button type="submit">Guardar Configuración</button>
+                             <button type="button" class="secondary" onclick="ConfigManager.resetToDefaults()">Restaurar Predeterminados</button>
+                              <div class="loading-indicator" id="config-loading" style="display: none;">Guardando...</div>
+                        </div>
+                    </form>
+                    <hr style="margin: 30px 0;">
+                    <div class="data-management">
+                        <h3>Gestión de Datos</h3>
+                        <div class="form-group">
+                            <button class="secondary" onclick="DataManager.exportData()">Exportar Datos (CSV)</button>
+                            <small style="display: block; margin-top: 5px;">Descarga todos los términos registrados a un archivo CSV.</small>
+                        </div>
+                        <div class="form-group">
+                             <label for="importFile">Importar Datos (CSV):</label>
+                            <input type="file" id="importFile" accept=".csv">
+                            <button type="button" class="secondary" onclick="DataManager.importData()">Importar Archivo</button>
+                             <small style="display: block; margin-top: 5px;">Importa términos desde un archivo CSV. <strong>Nota:</strong> Debe tener las columnas correctas (id, expediente, juzgado, tipoValue, tipoText, fechaInicio, dias, fechaVencimiento, horaVencimiento, notas, fechaRegistro). La importación <strong>añadirá</strong> los registros; no sobreescribe existentes con el mismo ID.</small>
+                            <div class="loading-indicator" id="import-loading" style="display: none;">Importando...</div>
+                        </div>
+                         <hr style="margin: 20px 0;">
+                        <div class="form-group">
+                            <button class="danger" onclick="DataManager.clearAllData()">Borrar Todos los Términos Registrados</button>
+                            <small style="display: block; margin-top: 5px; color: #c0392b;"><strong>¡CUIDADO!</strong> Esta acción es irreversible y eliminará todos los expedientes guardados en este navegador.</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div> </div> <script type="module" src="module1.js"></script>
+    <script type="module" src="module2.js"></script>
+    <script type="module" src="module3.js"></script>
+
+</body>
+</html>
